@@ -27,14 +27,4 @@ fs.readFile('./template.html', (err, data) => {
             insertFunc('header', x, i);
         } else copyArr[i] = x;
     });
-//  fs.appendFile(`./project-dist/index.html`, copyArr.join('\n'), callback);
 })
-
-// fs.unlink('./project-dist/index.html', (err) => {
-//     if (err && err.code !== 'ENOENT') {
-//       throw err;
-//     } else {
-//         fs.appendFile(`./project-dist/index.html`, copyArr.join('\n'), callback);
-        
-//     }
-//   });
