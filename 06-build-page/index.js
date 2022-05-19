@@ -7,22 +7,23 @@ const callback = (err) => {
 fs.rm(path.join(__dirname, 'project-dist'), {recursive: true, force: true}, () => {
   fs.readdir(path.join(__dirname, 'components'), (err, components) => {
     fs.readFile(path.join(__dirname, 'template.html'), (err, data) => {
-        template = data.toString();
-        fs.rm(path.join(__dirname, 'project-dist', 'index.html'), {force: true, recursive: true}, callback);
-        componentsNames = components.map(item => item.split('.')[0]);
-        componentsNames.forEach((x,i) => {
-            fs.readFile(path.join(__dirname, 'components', components[i]), (err, component) => {
-                // let re = new RegExp(`{{${x}}}.*`);
-                // let prefix = x.replace(re, '').slice(0, -1);
-                // data = data.toString().split('\n').map(x => prefix + x).join('');
-                template = template.replace(`{{${x}}}`, component);
-                if (i === components.length-1) {
-                    fs.appendFile(path.join(__dirname, 'project-dist', 'index.html'), template, callback);
-                }
-            });
-        })
-    })
-  })
+      let template = data.toString();
+      fs.rm(path.join(__dirname, 'project-dist', 'index.html'), {force: true, recursive: true}, callback);
+      let componentsNames = components.map(item => item.split('.')[0]);
+      componentsNames.forEach((x,i) => {
+        fs.readFile(path.join(__dirname, 'components', components[i]), (err, component) => {
+          let re = new RegExp(`\\n.*(?=\\{\\{${x}\\}\\})`);
+          let prefix = template.match(re) ? template.match(re)[0] : '';
+          prefix = prefix.slice(1);
+          component = component.toString().split('\n').map((x, i) => i === 0 ? x : prefix + x).join('');
+          template = template.replace(`{{${x}}}`, component);
+          if (i === components.length-1) {
+            fs.appendFile(path.join(__dirname, 'project-dist', 'index.html'), template, callback);
+          }
+        });
+      });
+    });
+  });
   // MERGE STYLES
   fs.rm(path.join(__dirname, 'project-dist', 'style.css'), () => {
     fs.readdir(path.join(__dirname, 'styles'), (err, arr) => {
