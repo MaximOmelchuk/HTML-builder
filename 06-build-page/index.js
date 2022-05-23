@@ -10,14 +10,16 @@ fs.rm(path.join(__dirname, 'project-dist'), {recursive: true, force: true}, () =
       let template = data.toString();
       fs.rm(path.join(__dirname, 'project-dist', 'index.html'), {force: true, recursive: true}, callback);
       let componentsNames = components.map(item => item.split('.')[0]);
+      let count = 0;
       componentsNames.forEach((x,i) => {
         fs.readFile(path.join(__dirname, 'components', components[i]), (err, component) => {
+          count++;
           let re = new RegExp(`\\n.*(?=\\{\\{${x}\\}\\})`);
           let prefix = template.match(re) ? template.match(re)[0] : '';
           prefix = prefix.slice(1);
           component = component.toString().split('\n').map((x, i) => i === 0 ? x : prefix + x).join('');
           template = template.replace(`{{${x}}}`, component);
-          if (i === components.length-1) {
+          if (count === components.length) {
             fs.appendFile(path.join(__dirname, 'project-dist', 'index.html'), template, callback);
           }
         });
@@ -40,28 +42,32 @@ fs.rm(path.join(__dirname, 'project-dist'), {recursive: true, force: true}, () =
   // COPY DIRECTORY
 
   fs.rm(path.join(__dirname, 'project-dist' ,'assets'), {recursive: true, force: true}, () => {
-    fs.mkdir(path.join(__dirname, 'project-dist' ,'assets'), {recursive: true}, callback);
-    const copyDir = (filePath) => {
-      fs.stat(filePath, (err, stats) => {
-        let destPath = filePath.replace('assets', 'project-dist\\assets');
-        if (!stats.isDirectory()) {
-          fs.copyFile(filePath, destPath, callback);
-        } else {
-          fs.readdir(filePath, (err, arr) => {
-            fs.mkdir(destPath, callback);
-            arr.forEach(x => {
-              copyDir(path.join(filePath, x));
+    fs.mkdir(path.join(__dirname, 'project-dist' ,'assets'), {recursive: true}, () => {
+
+    
+      const copyDir = (filePath) => {
+        fs.stat(filePath, (err, stats) => {
+          let destPath = filePath.replace('assets', 'project-dist\\assets');
+          if (!stats.isDirectory()) {
+            fs.copyFile(filePath, destPath, callback);
+          } else {
+            fs.readdir(filePath, (err, arr) => {
+              fs.mkdir(destPath, () => {
+                arr.forEach(x => {
+                  copyDir(path.join(filePath, x));
+                });
+              });
             });
-          });
-        }
+          }
+        });
+      }; 
+      fs.readdir(path.join(__dirname, 'assets'), (err, arr) => {
+        arr.forEach(x => {
+          copyDir(path.join(__dirname, 'assets', x));
+        });
       });
-    }; 
-    fs.readdir(path.join(__dirname, 'assets'), (err, arr) => {
-      arr.forEach(x => {
-        copyDir(path.join(__dirname, 'assets', x));
-      });
-    });
-  }); 
+    }); 
+  });
 });
 
 // let copyArr = [];
